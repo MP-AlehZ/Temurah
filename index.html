@@ -213,16 +213,16 @@
     <input type="text" id="search" placeholder="Search amud…" oninput="renderGrid()" style="width:130px" />
     <select id="filterStatus" onchange="renderGrid()">
       <option value="">All</option>
-      <option value="0">Open (not started)</option>
+      <option value="0">Open</option>
       <option value="1">Written</option>
       <option value="2">Edited</option>
       <option value="3">Mevukar</option>
       <option value="4">Kramer</option>
       <option value="5">Post Kramer</option>
-      <option value="6">Mevukar 2</option>
-      <option value="7">Proofread</option>
-      <option value="8">Post Proofreading</option>
-      <option value="9">Done</option>
+      <option value="6">Edited 2</option>
+      <option value="7">Mevukar 2</option>
+      <option value="8">Proofread</option>
+      <option value="9">Closed</option>
     </select>
   </div>
 </header>
@@ -235,28 +235,36 @@
 
 <script>
 const STAGES = [
-  { name: "Open",             color: "#c0392b" },
-  { name: "Written",          color: "#e67e22" },
-  { name: "Edited",           color: "#d4ac0d" },
-  { name: "Mevukar",          color: "#2980b9" },
-  { name: "Kramer",           color: "#8e44ad" },
-  { name: "Post Kramer",      color: "#16a085" },
-  { name: "Mevukar 2",        color: "#1abc9c" },
-  { name: "Proofread",        color: "#27ae60" },
-  { name: "Post Proofreading",color: "#145a32" },
-  { name: "Done",             color: "#1e8449" },
+  { name: "Open",         color: "#c0392b" },
+  { name: "Written",      color: "#e67e22" },
+  { name: "Edited",       color: "#d4ac0d" },
+  { name: "Mevukar",      color: "#2980b9" },
+  { name: "Kramer",       color: "#8e44ad" },
+  { name: "Post Kramer",  color: "#16a085" },
+  { name: "Edited 2",     color: "#1abc9c" },
+  { name: "Mevukar 2",    color: "#2471a3" },
+  { name: "Proofread",    color: "#27ae60" },
+  { name: "Closed",       color: "#1e8449" },
 ];
 /* stage index 0 = Open (red), 9 = Done (green). Clicking advances; after Done → back to Open */
 
 function genAmudim() {
+  const split = ['96b', '103b', '109a', '117b', '138b'];
   const list = ['89b'];
-  for (let d = 90; d <= 141; d++) { list.push(d+'a'); list.push(d+'b'); }
+  for (let d = 90; d <= 141; d++) {
+    const a = d + 'a';
+    const b = d + 'b';
+    if (split.indexOf(a) !== -1) { list.push(a+'1'); list.push(a+'2'); }
+    else list.push(a);
+    if (split.indexOf(b) !== -1) { list.push(b+'1'); list.push(b+'2'); }
+    else list.push(b);
+  }
   list.push('142a');
   return list;
 }
 const AMUDIM = genAmudim();
 
-const KEY = 'chullin_wf_v2';
+const KEY = 'chullin_wf_v3';
 let state = {};
 
 function load() {
@@ -286,7 +294,7 @@ function renderStats() {
   const open = counts[0];
   const inprog = AMUDIM.length - done - open;
   document.getElementById('statsBar').innerHTML =
-    `Total: <strong>${AMUDIM.length}</strong> &nbsp;|&nbsp; Open: <strong>${open}</strong> &nbsp;|&nbsp; In progress: <strong>${inprog}</strong> &nbsp;|&nbsp; Done: <strong style="color:#1e8449">${done}</strong>`;
+    `Total: <strong>${AMUDIM.length}</strong> &nbsp;|&nbsp; Open: <strong>${open}</strong> &nbsp;|&nbsp; In progress: <strong>${inprog}</strong> &nbsp;|&nbsp; Closed: <strong style="color:#1e8449">${done}</strong>`;
 }
 
 function renderGrid() {
