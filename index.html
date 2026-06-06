@@ -13,18 +13,6 @@
     --text: #1a1814;
     --text-muted: #6b6660;
     --shadow: 0 1px 3px rgba(0,0,0,0.08);
-
-    /* Stage colors */
-    --c-open:    #c0392b; /* red */
-    --c-written: #e67e22; /* orange */
-    --c-edited:  #f1c40f; /* yellow */
-    --c-mevukar: #2980b9; /* blue */
-    --c-kramer:  #8e44ad; /* purple */
-    --c-postkramer: #16a085; /* teal */
-    --c-mevukar2: #1abc9c; /* mint */
-    --c-proofread: #27ae60; /* green */
-    --c-postproof: #145a32; /* dark green */
-    --c-done:    #1e8449;  /* done green */
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,6 +101,28 @@
     flex-shrink: 0;
   }
 
+  .sync-bar {
+    padding: 6px 2rem;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #aaa;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .sync-dot.syncing { background: #e67e22; }
+  .sync-dot.ok      { background: #27ae60; }
+  .sync-dot.error   { background: #c0392b; }
+
   main { padding: 1.5rem 2rem; }
 
   .grid {
@@ -197,9 +207,18 @@
     font-size: 15px;
   }
 
+  .loading-overlay {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
   @media (max-width: 600px) {
     header, main { padding-left: 1rem; padding-right: 1rem; }
     .legend { padding-left: 1rem; padding-right: 1rem; }
+    .sync-bar { padding-left: 1rem; padding-right: 1rem; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
   }
 </style>
@@ -228,28 +247,33 @@
 </header>
 
 <div class="legend" id="legend"></div>
+<div class="sync-bar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncMsg">Connecting to Google Sheet…</span>
+</div>
 
 <main>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="grid"><div class="loading-overlay">Loading data from Google Sheet…</div></div>
 </main>
 
 <script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySwp4qCJJkbzaXusdXkwJv62lsyM-e9krp2eJ3lVL2fbAV789atY6Vyc-s03SSI1Yp/exec';
+
 const STAGES = [
-  { name: "Open",         color: "#c0392b" },
-  { name: "Written",      color: "#e67e22" },
-  { name: "Edited",       color: "#d4ac0d" },
-  { name: "Mevukar",      color: "#2980b9" },
-  { name: "Kramer",       color: "#8e44ad" },
-  { name: "Post Kramer",  color: "#16a085" },
-  { name: "Edited 2",     color: "#1abc9c" },
-  { name: "Mevukar 2",    color: "#2471a3" },
-  { name: "Proofread",    color: "#27ae60" },
-  { name: "Closed",       color: "#1e8449" },
+  { name: "Open",        color: "#c0392b" },
+  { name: "Written",     color: "#e67e22" },
+  { name: "Edited",      color: "#d4ac0d" },
+  { name: "Mevukar",     color: "#2980b9" },
+  { name: "Kramer",      color: "#8e44ad" },
+  { name: "Post Kramer", color: "#16a085" },
+  { name: "Edited 2",    color: "#1abc9c" },
+  { name: "Mevukar 2",   color: "#2471a3" },
+  { name: "Proofread",   color: "#27ae60" },
+  { name: "Closed",      color: "#1e8449" },
 ];
-/* stage index 0 = Open (red), 9 = Done (green). Clicking advances; after Done → back to Open */
 
 function genAmudim() {
-  const split = ['96b', '103b', '109a', '117b', '138b'];
+  const split = ['96b','103b','109a','117b','138b'];
   const list = ['89b'];
   for (let d = 90; d <= 141; d++) {
     const a = d + 'a';
@@ -264,39 +288,79 @@ function genAmudim() {
 }
 const AMUDIM = genAmudim();
 
-const KEY = 'chullin_wf_v3';
 let state = {};
+let saving = false;
 
-function load() {
-  try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch(e) {}
-  AMUDIM.forEach(a => { if (state[a] === undefined) state[a] = 0; });
+/* ── sync indicator ── */
+function syncStatus(status, msg) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncMsg');
+  dot.className = 'sync-dot ' + status;
+  txt.textContent = msg;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
 
+/* ── load from Google Sheet ── */
+function loadFromSheet() {
+  syncStatus('syncing', 'Loading from Google Sheet…');
+  fetch(SCRIPT_URL + '?action=load')
+    .then(r => r.json())
+    .then(data => {
+      // data is {amud: stageIndex, ...}
+      AMUDIM.forEach(a => { state[a] = (data[a] !== undefined) ? Number(data[a]) : 0; });
+      syncStatus('ok', 'Loaded — last sync: ' + new Date().toLocaleTimeString());
+      buildLegend();
+      renderGrid();
+    })
+    .catch(() => {
+      // fall back to localStorage if offline
+      try {
+        const raw = localStorage.getItem('chullin_wf_v3');
+        if (raw) state = JSON.parse(raw);
+      } catch(e) {}
+      AMUDIM.forEach(a => { if (state[a] === undefined) state[a] = 0; });
+      syncStatus('error', 'Could not reach Google Sheet — showing local data');
+      buildLegend();
+      renderGrid();
+    });
+}
+
+/* ── save one amud to Google Sheet ── */
+function saveToSheet(amud, stageIndex) {
+  syncStatus('syncing', 'Saving…');
+  // also save locally as backup
+  try { localStorage.setItem('chullin_wf_v3', JSON.stringify(state)); } catch(e) {}
+  fetch(SCRIPT_URL + '?action=save&amud=' + encodeURIComponent(amud) + '&stage=' + stageIndex)
+    .then(() => syncStatus('ok', 'Saved — ' + new Date().toLocaleTimeString()))
+    .catch(() => syncStatus('error', 'Save failed — check your connection'));
+}
+
+/* ── advance stage on click ── */
 function advance(amud) {
   state[amud] = (state[amud] + 1) % STAGES.length;
-  save();
   renderGrid();
+  saveToSheet(amud, state[amud]);
 }
 
+/* ── legend ── */
 function buildLegend() {
-  const el = document.getElementById('legend');
-  el.innerHTML = STAGES.map(s =>
+  document.getElementById('legend').innerHTML = STAGES.map(s =>
     `<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div>${s.name}</div>`
   ).join('');
 }
 
+/* ── stats ── */
 function renderStats() {
-  const counts = {};
-  STAGES.forEach((s,i) => counts[i] = 0);
-  AMUDIM.forEach(a => counts[state[a]]++);
-  const done = counts[9];
-  const open = counts[0];
-  const inprog = AMUDIM.length - done - open;
+  let closed = 0, open = 0;
+  AMUDIM.forEach(a => {
+    if (state[a] === 9) closed++;
+    else if (state[a] === 0) open++;
+  });
+  const inprog = AMUDIM.length - closed - open;
   document.getElementById('statsBar').innerHTML =
-    `Total: <strong>${AMUDIM.length}</strong> &nbsp;|&nbsp; Open: <strong>${open}</strong> &nbsp;|&nbsp; In progress: <strong>${inprog}</strong> &nbsp;|&nbsp; Closed: <strong style="color:#1e8449">${done}</strong>`;
+    `Total: <strong>${AMUDIM.length}</strong> &nbsp;|&nbsp; Open: <strong>${open}</strong> &nbsp;|&nbsp; In progress: <strong>${inprog}</strong> &nbsp;|&nbsp; Closed: <strong style="color:#1e8449">${closed}</strong>`;
 }
 
+/* ── render ── */
 function renderGrid() {
   const search = document.getElementById('search').value.trim().toLowerCase();
   const filterVal = document.getElementById('filterStatus').value;
@@ -319,12 +383,10 @@ function renderGrid() {
     const si = state[amud];
     const stage = STAGES[si];
     const pct = si === 0 ? 0 : Math.round((si / (STAGES.length - 1)) * 100);
-
     const dots = STAGES.slice(1).map((s, i) => {
-      const filled = si > i;  /* dot i (0-indexed from Written) is filled if stage > i */
+      const filled = si > i;
       return `<div class="dot ${filled ? 'filled' : ''}" style="${filled ? 'background:'+STAGES[i+1].color : ''}"></div>`;
     }).join('');
-
     return `<div class="card" onclick="advance('${amud}')" title="Click to advance · Current: ${stage.name}">
       <div class="card-header">
         <span class="amud-label">${amud}</span>
@@ -342,9 +404,20 @@ function renderGrid() {
   renderStats();
 }
 
-load();
-buildLegend();
-renderGrid();
+// auto-refresh every 30 seconds so changes by others appear
+setInterval(() => {
+  syncStatus('syncing', 'Refreshing…');
+  fetch(SCRIPT_URL + '?action=load')
+    .then(r => r.json())
+    .then(data => {
+      AMUDIM.forEach(a => { state[a] = (data[a] !== undefined) ? Number(data[a]) : 0; });
+      syncStatus('ok', 'Refreshed — ' + new Date().toLocaleTimeString());
+      renderGrid();
+    })
+    .catch(() => syncStatus('error', 'Auto-refresh failed'));
+}, 30000);
+
+loadFromSheet();
 </script>
 </body>
 </html>
