@@ -289,7 +289,8 @@ function genAmudim() {
 const AMUDIM = genAmudim();
 
 let state = {};
-let saving = false;
+let pendingSaves = 0;
+let lastClickTime = 0;
 
 /* ── sync indicator ── */
 function syncStatus(status, msg) {
@@ -305,14 +306,12 @@ function loadFromSheet() {
   fetch(SCRIPT_URL + '?action=load')
     .then(r => r.json())
     .then(data => {
-      // data is {amud: stageIndex, ...}
       AMUDIM.forEach(a => { state[a] = (data[a] !== undefined) ? Number(data[a]) : 0; });
       syncStatus('ok', 'Loaded — last sync: ' + new Date().toLocaleTimeString());
       buildLegend();
       renderGrid();
     })
     .catch(() => {
-      // fall back to localStorage if offline
       try {
         const raw = localStorage.getItem('chullin_wf_v3');
         if (raw) state = JSON.parse(raw);
@@ -327,16 +326,23 @@ function loadFromSheet() {
 /* ── save one amud to Google Sheet ── */
 function saveToSheet(amud, stageIndex) {
   syncStatus('syncing', 'Saving…');
-  // also save locally as backup
+  pendingSaves++;
   try { localStorage.setItem('chullin_wf_v3', JSON.stringify(state)); } catch(e) {}
   fetch(SCRIPT_URL + '?action=save&amud=' + encodeURIComponent(amud) + '&stage=' + stageIndex)
-    .then(() => syncStatus('ok', 'Saved — ' + new Date().toLocaleTimeString()))
-    .catch(() => syncStatus('error', 'Save failed — check your connection'));
+    .then(() => {
+      pendingSaves--;
+      syncStatus('ok', 'Saved — ' + new Date().toLocaleTimeString());
+    })
+    .catch(() => {
+      pendingSaves--;
+      syncStatus('error', 'Save failed — check your connection');
+    });
 }
 
 /* ── advance stage on click ── */
 function advance(amud) {
   state[amud] = (state[amud] + 1) % STAGES.length;
+  lastClickTime = Date.now();
   renderGrid();
   saveToSheet(amud, state[amud]);
 }
@@ -404,13 +410,19 @@ function renderGrid() {
   renderStats();
 }
 
-// auto-refresh every 30 seconds so changes by others appear
+// auto-refresh every 30 seconds — but only if no saves are pending
+// and at least 5 seconds have passed since the last click
 setInterval(() => {
+  if (pendingSaves > 0) return;
+  if (Date.now() - lastClickTime < 5000) return;
   syncStatus('syncing', 'Refreshing…');
   fetch(SCRIPT_URL + '?action=load')
     .then(r => r.json())
     .then(data => {
-      AMUDIM.forEach(a => { state[a] = (data[a] !== undefined) ? Number(data[a]) : 0; });
+      // only update amudim that are NOT currently being edited
+      AMUDIM.forEach(a => {
+        if (data[a] !== undefined) state[a] = Number(data[a]);
+      });
       syncStatus('ok', 'Refreshed — ' + new Date().toLocaleTimeString());
       renderGrid();
     })
@@ -418,6 +430,7 @@ setInterval(() => {
 }, 30000);
 
 loadFromSheet();
+
 </script>
 </body>
 </html>
