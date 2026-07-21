@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chullin Workflow Tracker</title>
+<title>Temurah Workflow Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
@@ -44,7 +44,6 @@
   .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.1s, box-shadow 0.1s; cursor: pointer; user-select: none; }
   .card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
   .card:active { transform: scale(0.98); }
-  .card.saving-indicator { opacity: 0.75; }
 
   .card-header { padding: 8px 12px 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .amud-label { font-family: 'Frank Ruhl Libre', serif; font-size: 15px; font-weight: 700; color: var(--text); }
@@ -69,7 +68,7 @@
 <body>
 
 <header>
-  <div class="logo">חולין · <span>Workflow</span></div>
+  <div class="logo">תמורה · <span>Workflow</span></div>
   <div class="header-right">
     <div class="stats-pill" id="statsBar">—</div>
     <input type="text" id="search" placeholder="Search amud…" oninput="renderGrid()" style="width:130px" />
@@ -99,7 +98,6 @@
   <div class="grid" id="grid"><div class="loading-overlay">Connecting to database…</div></div>
 </main>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -116,7 +114,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const stateRef = ref(db, 'amudim');
+const stateRef = ref(db, 'temurah');
 
 const STAGES = [
   { name: "Open",        color: "#c0392b" },
@@ -132,14 +130,14 @@ const STAGES = [
 ];
 
 function genAmudim() {
-  const split = ['96b','103b','109a','117b','138b'];
-  const list = ['89b'];
-  for (let d = 90; d <= 141; d++) {
+  const split = ['17b', '21b', '31a'];
+  const list = [];
+  for (let d = 2; d <= 33; d++) {
     const a = d + 'a', b = d + 'b';
     split.includes(a) ? list.push(a+'1', a+'2') : list.push(a);
     split.includes(b) ? list.push(b+'1', b+'2') : list.push(b);
   }
-  list.push('142a');
+  list.push('34a');
   return list;
 }
 const AMUDIM = genAmudim();
@@ -204,7 +202,6 @@ function renderGrid() {
     </div>`;
   }).join('');
 
-  // attach click listeners
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => advance(card.dataset.amud));
   });
@@ -215,21 +212,15 @@ function renderGrid() {
 function advance(amud) {
   const newStage = ((state[amud] || 0) + 1) % STAGES.length;
   state[amud] = newStage;
-  // update UI instantly
   renderGrid();
-  // write only this one amud to Firebase — no refresh needed, Firebase pushes updates live
   syncStatus('saving', 'Saving…');
   update(stateRef, { [amud]: newStage })
     .then(() => syncStatus('live', 'Live — all changes saved'))
     .catch(() => syncStatus('error', 'Save failed — check connection'));
 }
 
-// Listen for real-time changes from Firebase
-// This fires once on load (with all data) and then whenever ANY client changes something
 onValue(stateRef, (snapshot) => {
   const data = snapshot.val() || {};
-  // Merge: only update amudim that we are NOT currently in the middle of clicking
-  // Firebase's onValue is the single source of truth — this replaces polling entirely
   AMUDIM.forEach(a => { state[a] = data[a] !== undefined ? Number(data[a]) : 0; });
   syncStatus('live', 'Live — all changes saved');
   renderGrid();
