@@ -48,13 +48,16 @@
   .graphics-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
   .add-graphic-btn { font-size:10px; font-weight:600; color:#8e44ad; background:none; border:1px solid #8e44ad; border-radius:6px; padding:2px 7px; cursor:pointer; transition:background 0.1s,color 0.1s; }
   .add-graphic-btn:hover { background:#8e44ad; color:#fff; }
-  .graphic-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; padding:5px 7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:background 0.1s; user-select:none; }
-  .graphic-row:hover { background:#eee9de; }
+  .graphic-row { display:flex; align-items:center; gap:5px; margin-bottom:5px; padding:5px 7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
   .graphic-row:last-child { margin-bottom:0; }
   .graphic-num { font-size:10px; font-weight:700; color:var(--text-muted); min-width:18px; flex-shrink:0; }
+  .graphic-advance { display:flex; align-items:center; gap:5px; flex:1; cursor:pointer; user-select:none; transition:background 0.1s; border-radius:5px; padding:2px 3px; }
+  .graphic-advance:hover { background:#eee9de; }
   .graphic-badge { font-size:9px; font-weight:600; padding:2px 5px; border-radius:999px; color:#fff; white-space:nowrap; flex:1; text-align:center; }
   .graphic-dots { display:flex; gap:2px; flex-shrink:0; }
   .gdot { width:7px; height:7px; border-radius:2px; border:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+  .remove-graphic-btn { font-size:11px; font-weight:700; color:#c0392b; background:none; border:1px solid #c0392b; border-radius:5px; padding:1px 5px; cursor:pointer; flex-shrink:0; line-height:1.4; transition:background 0.1s,color 0.1s; }
+  .remove-graphic-btn:hover { background:#c0392b; color:#fff; }
   .no-results,.loading-overlay { grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted); font-size:15px; }
   @media(max-width:600px) { header,main{padding-left:1rem;padding-right:1rem} .legend,.sync-bar{padding-left:1rem;padding-right:1rem} .grid{grid-template-columns:1fr;gap:10px} }
 </style>
@@ -139,14 +142,20 @@ function syncStatus(status,msg) {
   document.getElementById('syncMsg').textContent=msg;
 }
 function saveAmud(amud) {
-  syncStatus('saving','Saving…');
+  syncStatus('saving','Saving\u2026');
   set(ref(db,'temurah/'+amud),state[amud])
-    .then(()=>syncStatus('live','Live — all changes saved'))
-    .catch(()=>syncStatus('error','Save failed — check connection'));
+    .then(()=>syncStatus('live','Live \u2014 all changes saved'))
+    .catch(()=>syncStatus('error','Save failed \u2014 check connection'));
 }
 function advanceMain(amud) { getS(amud).stage=(getS(amud).stage+1)%MAIN_STAGES.length; renderGrid(); saveAmud(amud); }
 function advanceGraphic(amud,gi) { getS(amud).graphics[gi]=(getS(amud).graphics[gi]+1)%GRAPHIC_STAGES.length; renderGrid(); saveAmud(amud); }
 function addGraphic(amud) { getS(amud).graphics.push(0); renderGrid(); saveAmud(amud); }
+function removeGraphic(amud,gi) {
+  if (gi===0) return;
+  getS(amud).graphics.splice(gi,1);
+  renderGrid();
+  saveAmud(amud);
+}
 function buildLegend() {
   const mi=MAIN_STAGES.map(s=>'<div class="legend-item"><div class="legend-dot" style="background:'+s.color+'"></div>'+s.name+'</div>').join('');
   const gi=GRAPHIC_STAGES.map(s=>'<div class="legend-item"><div class="legend-dot" style="background:'+s.color+'"></div>'+s.name+'</div>').join('');
@@ -165,7 +174,8 @@ function cardHTML(amud) {
   const graphicsHTML=s.graphics.map((gStage,gi)=>{
     const gs=GRAPHIC_STAGES[gStage];
     const gdots=GRAPHIC_STAGES.map((gs2,i)=>'<div class="gdot" style="'+(gStage>i?'background:'+GRAPHIC_STAGES[i].color+';border-color:'+GRAPHIC_STAGES[i].color:'')+'"></div>').join('');
-    return '<div class="graphic-row" data-amud="'+amud+'" data-gi="'+gi+'"><span class="graphic-num">G'+(gi+1)+'</span><span class="graphic-badge" style="background:'+gs.color+'">'+gs.name+'</span><div class="graphic-dots">'+gdots+'</div></div>';
+    const removeBtn=gi>0?'<button class="remove-graphic-btn" data-amud="'+amud+'" data-gi="'+gi+'" title="Remove">&times;</button>':''; 
+    return '<div class="graphic-row"><span class="graphic-num">G'+(gi+1)+'</span><div class="graphic-advance" data-amud="'+amud+'" data-gi="'+gi+'"><span class="graphic-badge" style="background:'+gs.color+'">'+gs.name+'</span><div class="graphic-dots">'+gdots+'</div></div>'+removeBtn+'</div>';
   }).join('');
   return '<div class="card"><div class="card-main" data-amud="'+amud+'"><div class="card-header"><span class="amud-label">'+amud+'</span><span class="stage-badge" style="background:'+stage.color+'">'+stage.name+'</span></div><div class="card-body"><div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;background:'+stage.color+'"></div></div><div class="stage-dots">'+dots+'</div></div></div><div class="graphics-section"><div class="graphics-header"><span class="graphics-label">Graphics</span><button class="add-graphic-btn" data-amud="'+amud+'">+ Add</button></div>'+graphicsHTML+'</div></div>';
 }
@@ -181,8 +191,9 @@ function renderGrid() {
   if(visible.length===0){grid.innerHTML='<div class="no-results">No amudim match this filter.</div>';renderStats();return;}
   grid.innerHTML=visible.map(cardHTML).join('');
   grid.querySelectorAll('.card-main').forEach(el=>el.addEventListener('click',()=>advanceMain(el.dataset.amud)));
-  grid.querySelectorAll('.graphic-row').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();advanceGraphic(el.dataset.amud,parseInt(el.dataset.gi));}));
+  grid.querySelectorAll('.graphic-advance').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();advanceGraphic(el.dataset.amud,parseInt(el.dataset.gi));}));
   grid.querySelectorAll('.add-graphic-btn').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();addGraphic(el.dataset.amud);}));
+  grid.querySelectorAll('.remove-graphic-btn').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();removeGraphic(el.dataset.amud,parseInt(el.dataset.gi));}));
   renderStats();
 }
 onValue(amudimRef,(snapshot)=>{
@@ -191,7 +202,7 @@ onValue(amudimRef,(snapshot)=>{
     if(data[a]!==undefined){state[a]={stage:Number(data[a].stage||0),graphics:Array.isArray(data[a].graphics)?data[a].graphics.map(Number):[0]};}
     else{state[a]={stage:0,graphics:[0]};}
   });
-  syncStatus('live','Live — all changes saved');
+  syncStatus('live','Live \u2014 all changes saved');
   renderGrid();
 });
 buildLegend();
