@@ -11,12 +11,12 @@
   body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
   header { background:var(--surface); border-bottom:1.5px solid var(--border); padding:1.25rem 2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
   .logo { font-family:'Frank Ruhl Libre',serif; font-size:1.4rem; font-weight:700; color:var(--text); }
-  .logo span { color:#c0392b; }
+  .logo span { color:#6c3483; }
   .header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   .stats-pill { background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--text-muted); }
   .stats-pill strong { color:var(--text); }
   input[type=text],select { border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; padding:6px 10px; font-family:'DM Sans',sans-serif; font-size:13px; outline:none; }
-  input[type=text]:focus,select:focus { border-color:#8e44ad; }
+  input[type=text]:focus,select:focus { border-color:#6c3483; }
   .legend { display:flex; flex-wrap:wrap; gap:8px; padding:0.75rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); font-size:11px; align-items:center; }
   .legend-section { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
   .legend-title { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:3px; }
@@ -26,7 +26,7 @@
   .sync-bar { padding:5px 2rem; font-size:11px; color:var(--text-muted); background:var(--bg); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
   .sync-dot { width:7px; height:7px; border-radius:50%; background:#aaa; flex-shrink:0; transition:background 0.3s; }
   .sync-dot.live { background:#1a8a3a; }
-  .sync-dot.saving { background:#c97a2b; animation:pulse 0.6s infinite alternate; }
+  .sync-dot.saving { background:#c9a227; animation:pulse 0.6s infinite alternate; }
   .sync-dot.error { background:#c0392b; }
   @keyframes pulse { from{opacity:1} to{opacity:0.3} }
   main { padding:1.5rem 2rem; }
@@ -46,8 +46,8 @@
   .graphics-section { border-top:2px dashed var(--border); background:#f2efe8; padding:8px 10px; }
   .graphics-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .graphics-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
-  .add-graphic-btn { font-size:10px; font-weight:600; color:#6a3a6a; background:none; border:1px solid #6a3a6a; border-radius:6px; padding:2px 7px; cursor:pointer; transition:background 0.1s,color 0.1s; }
-  .add-graphic-btn:hover { background:#6a3a6a; color:#fff; }
+  .add-graphic-btn { font-size:10px; font-weight:600; color:#6c3483; background:none; border:1px solid #6c3483; border-radius:6px; padding:2px 7px; cursor:pointer; transition:background 0.1s,color 0.1s; }
+  .add-graphic-btn:hover { background:#6c3483; color:#fff; }
   .graphic-row { display:flex; align-items:center; gap:5px; margin-bottom:5px; padding:5px 7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
   .graphic-row:last-child { margin-bottom:0; }
   .graphic-num { font-size:10px; font-weight:700; color:var(--text-muted); min-width:18px; flex-shrink:0; }
@@ -107,26 +107,26 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const amudimRef = ref(db, 'temurah');
 const MAIN_STAGES = [
-  {name:"Open",        color:"#c0392b"},
-  {name:"Written",     color:"#c0532b"},
-  {name:"Edited",      color:"#c97a2b"},
-  {name:"Mevukar",     color:"#c9a227"},
-  {name:"Kramer",      color:"#a08520"},
+  {name:"Open",        color:"#95a5a6"},
+  {name:"Written",     color:"#7fb3d3"},
+  {name:"Edited",      color:"#2471a3"},
+  {name:"Mevukar",     color:"#6c3483"},
+  {name:"Kramer",      color:"#a569bd"},
   {name:"Post Kramer", color:"#7a5a30"},
-  {name:"Edited 2",    color:"#6a3a6a"},
-  {name:"Mevukar 2",   color:"#4a4a9a"},
-  {name:"Proofread",   color:"#2a7a7a"},
+  {name:"Edited 2",    color:"#c9a227"},
+  {name:"Mevukar 2",   color:"#d4c500"},
+  {name:"Proofread",   color:"#82c341"},
   {name:"Closed",      color:"#1a8a3a"}
 ];
 const GRAPHIC_STAGES = [
-  {name:"None",        color:"#c0392b"},
-  {name:"Requested",   color:"#c0532b"},
-  {name:"Ordered",     color:"#c97a2b"},
-  {name:"Rcvd & Fwd",  color:"#a08520"},
-  {name:"Adjustments", color:"#7a5a30"},
-  {name:"To Border",   color:"#6a3a6a"},
-  {name:"Received",    color:"#4a4a9a"},
-  {name:"Reviewed",    color:"#2a7a7a"},
+  {name:"None",        color:"#95a5a6"},
+  {name:"Requested",   color:"#7fb3d3"},
+  {name:"Ordered",     color:"#2471a3"},
+  {name:"Rcvd & Fwd",  color:"#6c3483"},
+  {name:"Adjustments", color:"#a569bd"},
+  {name:"To Border",   color:"#7a5a30"},
+  {name:"Received",    color:"#d4c500"},
+  {name:"Reviewed",    color:"#82c341"},
   {name:"Uploaded",    color:"#1a8a3a"}
 ];
 function genAmudim() {
