@@ -114,9 +114,10 @@ const MAIN_STAGES = [
   {name:"Proofread",color:"#27ae60"},{name:"Closed",color:"#1e8449"}
 ];
 const GRAPHIC_STAGES = [
+  {name:"None",color:"#95a5a6"},
   {name:"Requested",color:"#c0392b"},{name:"Ordered",color:"#e67e22"},
   {name:"Rcvd & Fwd",color:"#d4ac0d"},{name:"Adjustments",color:"#2980b9"},
-  {name:"Sent/Borders",color:"#8e44ad"},{name:"Received",color:"#16a085"},
+  {name:"To Border",color:"#8e44ad"},{name:"Received",color:"#16a085"},
   {name:"Reviewed",color:"#27ae60"},{name:"Uploaded",color:"#1e8449"}
 ];
 function genAmudim() {
@@ -159,7 +160,7 @@ function removeGraphic(amud,gi) {
 function buildLegend() {
   const mi=MAIN_STAGES.map(s=>'<div class="legend-item"><div class="legend-dot" style="background:'+s.color+'"></div>'+s.name+'</div>').join('');
   const gi=GRAPHIC_STAGES.map(s=>'<div class="legend-item"><div class="legend-dot" style="background:'+s.color+'"></div>'+s.name+'</div>').join('');
-  document.getElementById('legend').innerHTML='<div class="legend-section"><span class="legend-title">Text:</span>'+mi+'</div><div class="legend-divider"></div><div class="legend-section"><span class="legend-title">Graphics:</span>'+gi+'</div>';
+  document.getElementById('legend').innerHTML='<div class="legend-section"><span class="legend-title">Text:</span>'+mi+'</div><div class="legend-divider"></div><div class="legend-section"><span class="legend-title">Graphics:</span>'+ gi+'</div>';
 }
 function renderStats() {
   let closed=0,open=0;
@@ -173,7 +174,7 @@ function cardHTML(amud) {
   const dots=MAIN_STAGES.slice(1).map((ms,i)=>'<div class="dot" style="'+(si>i?'background:'+MAIN_STAGES[i+1].color+';border-color:'+MAIN_STAGES[i+1].color:'')+'"></div>').join('');
   const graphicsHTML=s.graphics.map((gStage,gi)=>{
     const gs=GRAPHIC_STAGES[gStage];
-    const gdots=GRAPHIC_STAGES.map((gs2,i)=>'<div class="gdot" style="'+(gStage>i?'background:'+GRAPHIC_STAGES[i].color+';border-color:'+GRAPHIC_STAGES[i].color:'')+'"></div>').join('');
+    const gdots=GRAPHIC_STAGES.slice(1).map((gs2,i)=>'<div class="gdot" style="'+(gStage>i+1?'background:'+GRAPHIC_STAGES[i+1].color+';border-color:'+GRAPHIC_STAGES[i+1].color:'')+'"></div>').join('');
     const removeBtn=gi>0?'<button class="remove-graphic-btn" data-amud="'+amud+'" data-gi="'+gi+'" title="Remove">&times;</button>':''; 
     return '<div class="graphic-row"><span class="graphic-num">G'+(gi+1)+'</span><div class="graphic-advance" data-amud="'+amud+'" data-gi="'+gi+'"><span class="graphic-badge" style="background:'+gs.color+'">'+gs.name+'</span><div class="graphic-dots">'+gdots+'</div></div>'+removeBtn+'</div>';
   }).join('');
