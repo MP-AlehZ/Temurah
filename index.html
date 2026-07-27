@@ -9,14 +9,19 @@
   :root { --bg:#f5f2eb; --surface:#fffdf8; --border:#ddd8cc; --text:#1a1814; --text-muted:#6b6660; --shadow:0 1px 3px rgba(0,0,0,0.08); }
   *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-  header { background:var(--surface); border-bottom:1.5px solid var(--border); padding:1.25rem 2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
+  header { background:var(--surface); border-bottom:1.5px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
   .logo { font-family:'Frank Ruhl Libre',serif; font-size:1.4rem; font-weight:700; color:var(--text); }
-  .logo span { color:#6c3483; }
-  .header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .logo span { color:#e74c3c; }
+  .header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .header-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:0.5rem 2rem; background:#f0ece3; border-bottom:1px solid var(--border); }
+  .link-btn { font-size:12px; font-weight:600; padding:5px 12px; border-radius:7px; border:1.5px solid #7a5a30; color:#7a5a30; background:var(--surface); text-decoration:none; transition:background 0.1s,color 0.1s; white-space:nowrap; }
+  .link-btn:hover { background:#7a5a30; color:#fff; }
+  .link-btn.small { font-size:11px; padding:4px 9px; border-color:#95a5a6; color:#555; }
+  .link-btn.small:hover { background:#95a5a6; color:#fff; }
   .stats-pill { background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--text-muted); }
   .stats-pill strong { color:var(--text); }
   input[type=text],select { border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; padding:6px 10px; font-family:'DM Sans',sans-serif; font-size:13px; outline:none; }
-  input[type=text]:focus,select:focus { border-color:#6c3483; }
+  input[type=text]:focus,select:focus { border-color:#9b59b6; }
   .legend { display:flex; flex-wrap:wrap; gap:8px; padding:0.75rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); font-size:11px; align-items:center; }
   .legend-section { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
   .legend-title { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-right:3px; }
@@ -25,9 +30,9 @@
   .legend-divider { width:1px; height:18px; background:var(--border); margin:0 8px; }
   .sync-bar { padding:5px 2rem; font-size:11px; color:var(--text-muted); background:var(--bg); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
   .sync-dot { width:7px; height:7px; border-radius:50%; background:#aaa; flex-shrink:0; transition:background 0.3s; }
-  .sync-dot.live { background:#1a8a3a; }
-  .sync-dot.saving { background:#c9a227; animation:pulse 0.6s infinite alternate; }
-  .sync-dot.error { background:#c0392b; }
+  .sync-dot.live { background:#1db954; }
+  .sync-dot.saving { background:#ff8c7a; animation:pulse 0.6s infinite alternate; }
+  .sync-dot.error { background:#e74c3c; }
   @keyframes pulse { from{opacity:1} to{opacity:0.3} }
   main { padding:1.5rem 2rem; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
@@ -46,8 +51,8 @@
   .graphics-section { border-top:2px dashed var(--border); background:#f2efe8; padding:8px 10px; }
   .graphics-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .graphics-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
-  .add-graphic-btn { font-size:10px; font-weight:600; color:#6c3483; background:none; border:1px solid #6c3483; border-radius:6px; padding:2px 7px; cursor:pointer; transition:background 0.1s,color 0.1s; }
-  .add-graphic-btn:hover { background:#6c3483; color:#fff; }
+  .add-graphic-btn { font-size:10px; font-weight:600; color:#9b59b6; background:none; border:1px solid #9b59b6; border-radius:6px; padding:2px 7px; cursor:pointer; transition:background 0.1s,color 0.1s; }
+  .add-graphic-btn:hover { background:#9b59b6; color:#fff; }
   .graphic-row { display:flex; align-items:center; gap:5px; margin-bottom:5px; padding:5px 7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
   .graphic-row:last-child { margin-bottom:0; }
   .graphic-num { font-size:10px; font-weight:700; color:var(--text-muted); min-width:18px; flex-shrink:0; }
@@ -56,10 +61,10 @@
   .graphic-badge { font-size:9px; font-weight:600; padding:2px 5px; border-radius:999px; color:#fff; white-space:nowrap; flex:1; text-align:center; }
   .graphic-dots { display:flex; gap:2px; flex-shrink:0; }
   .gdot { width:7px; height:7px; border-radius:2px; border:1px solid var(--border); background:var(--bg); flex-shrink:0; }
-  .remove-graphic-btn { font-size:11px; font-weight:700; color:#c0392b; background:none; border:1px solid #c0392b; border-radius:5px; padding:1px 5px; cursor:pointer; flex-shrink:0; line-height:1.4; transition:background 0.1s,color 0.1s; }
-  .remove-graphic-btn:hover { background:#c0392b; color:#fff; }
+  .remove-graphic-btn { font-size:11px; font-weight:700; color:#e74c3c; background:none; border:1px solid #e74c3c; border-radius:5px; padding:1px 5px; cursor:pointer; flex-shrink:0; line-height:1.4; transition:background 0.1s,color 0.1s; }
+  .remove-graphic-btn:hover { background:#e74c3c; color:#fff; }
   .no-results,.loading-overlay { grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted); font-size:15px; }
-  @media(max-width:600px) { header,main{padding-left:1rem;padding-right:1rem} .legend,.sync-bar{padding-left:1rem;padding-right:1rem} .grid{grid-template-columns:1fr;gap:10px} }
+  @media(max-width:600px) { header,main{padding-left:1rem;padding-right:1rem} .legend,.sync-bar,.header-links{padding-left:1rem;padding-right:1rem} .grid{grid-template-columns:1fr;gap:10px} }
 </style>
 </head>
 <body>
@@ -83,6 +88,12 @@
     </select>
   </div>
 </header>
+<div class="header-links">
+  <a class="link-btn" href="https://alehzayis.sharepoint.com/:f:/s/info/IgAb6yJwcWHGQJP0Dn_Ay_iKAVpZ0YlgM9ZiNt59J7c-oqg?e=mdqx1Q" target="_blank">AZ-26455 Temurah Sharepoint</a>
+  <a class="link-btn" href="https://alehzayis.sharepoint.com/:x:/s/info/IQBwpN5_0gnWQrGFU0J2gkf4Aec94AloV6wiF6dvPaZ0gAs?e=jldNmu" target="_blank">Graphics Spreadsheet</a>
+  <a class="link-btn small" href="https://alehzayis.sharepoint.com/:f:/s/info/IgB-1nasTLVYQr0pgBvvjSmhASpYErfBjitjqqlqKtqJAko?e=Zdjy3p" target="_blank">Writers</a>
+  <a class="link-btn small" href="https://alehzayis.sharepoint.com/:f:/s/info/IgC1pPMATOj6SLKVTmlgJuFKAeDJhM58Huw6yWK9QJ_RDyw?e=FAxlCM" target="_blank">Editors</a>
+</div>
 <div class="legend" id="legend"></div>
 <div class="sync-bar">
   <div class="sync-dot" id="syncDot"></div>
@@ -107,27 +118,27 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const amudimRef = ref(db, 'temurah');
 const MAIN_STAGES = [
-  {name:"Open",        color:"#95a5a6"},
-  {name:"Written",     color:"#7fb3d3"},
-  {name:"Edited",      color:"#2471a3"},
-  {name:"Mevukar",     color:"#6c3483"},
-  {name:"Kramer",      color:"#a569bd"},
-  {name:"Post Kramer", color:"#7a5a30"},
-  {name:"Edited 2",    color:"#c9a227"},
-  {name:"Mevukar 2",   color:"#d4c500"},
-  {name:"Proofread",   color:"#82c341"},
-  {name:"Closed",      color:"#1a8a3a"}
+  {name:"Open",        color:"#e74c3c"},
+  {name:"Written",     color:"#ff8c7a"},
+  {name:"Edited",      color:"#d7a8e8"},
+  {name:"Mevukar",     color:"#9b59b6"},
+  {name:"Kramer",      color:"#8b5a3a"},
+  {name:"Post Kramer", color:"#aab7b8"},
+  {name:"Edited 2",    color:"#5dade2"},
+  {name:"Mevukar 2",   color:"#2e86c1"},
+  {name:"Proofread",   color:"#a9db5e"},
+  {name:"Closed",      color:"#1db954"}
 ];
 const GRAPHIC_STAGES = [
-  {name:"None",        color:"#95a5a6"},
-  {name:"Requested",   color:"#7fb3d3"},
-  {name:"Ordered",     color:"#2471a3"},
-  {name:"Rcvd & Fwd",  color:"#6c3483"},
-  {name:"Adjustments", color:"#a569bd"},
-  {name:"To Border",   color:"#7a5a30"},
-  {name:"Received",    color:"#d4c500"},
-  {name:"Reviewed",    color:"#82c341"},
-  {name:"Uploaded",    color:"#1a8a3a"}
+  {name:"None",        color:"#e74c3c"},
+  {name:"Requested",   color:"#ff8c7a"},
+  {name:"Ordered",     color:"#d7a8e8"},
+  {name:"Rcvd & Fwd",  color:"#8b5a3a"},
+  {name:"Adjustments", color:"#aab7b8"},
+  {name:"To Border",   color:"#5dade2"},
+  {name:"Received",    color:"#2e86c1"},
+  {name:"Reviewed",    color:"#a9db5e"},
+  {name:"Uploaded",    color:"#1db954"}
 ];
 function genAmudim() {
   const split = ['17b','21b','31a'];
@@ -175,7 +186,7 @@ function renderStats() {
   let closed=0,open=0;
   AMUDIM.forEach(a=>{const s=getS(a);if(s.stage===9)closed++;else if(s.stage===0)open++;});
   const inprog=AMUDIM.length-closed-open;
-  document.getElementById('statsBar').innerHTML='Total: <strong>'+AMUDIM.length+'</strong> &nbsp;|&nbsp; Open: <strong>'+open+'</strong> &nbsp;|&nbsp; In progress: <strong>'+inprog+'</strong> &nbsp;|&nbsp; Closed: <strong style="color:#1a8a3a">'+closed+'</strong>';
+  document.getElementById('statsBar').innerHTML='Total: <strong>'+AMUDIM.length+'</strong> &nbsp;|&nbsp; Open: <strong>'+open+'</strong> &nbsp;|&nbsp; In progress: <strong>'+inprog+'</strong> &nbsp;|&nbsp; Closed: <strong style="color:#1db954">'+closed+'</strong>';
 }
 function cardHTML(amud) {
   const s=getS(amud),si=s.stage,stage=MAIN_STAGES[si];
